@@ -48,14 +48,43 @@ async function main() {
 }
 
 async function getDocs(sheets, spreadsheetId) {
-    const titles = await getSheetTitles(sheets, spreadsheetId)
-    // assuming <= 100 mechs
-    const ranges = titles.map(title => `${title}!A2:B101`)
+    const allProps = await getSheetProperties(sheets, spreadsheetId)
+    const ranges = allProps.map(props => {
+        const {title, gridProperties: {rowCount, columnCount}} = props
+        return fullRange(title, rowCount, columnCount)
+    })
     const result = await sheets.spreadsheets.values.batchGet({
         spreadsheetId,
         ranges,
     })
+    // TODO: remove titles
+    const titles = allProps.map(props => props.title)
     return createDocs(titles, result.data.valueRanges)
+}
+
+async function getSheetProperties(sheets, spreadsheetId) {
+    const result = await sheets.spreadsheets.get({spreadsheetId})
+    return result.data.sheets.map(sheet => sheet.properties)
+}
+
+function fullRange(title, rows, columns) {
+    return `'${title}'!A1:${column(columns)}${rows}`
+}
+
+const A = 'A'.charCodeAt(0)
+
+function column(number) {
+    if (!Number.isInteger(number) || number < 1) {
+        throw new Error(`number is not a positive integer: ${number}`)
+    }
+    let ret = ''
+    while (number > 0) {
+        // number - 1 shifts 1..26 to 0..25
+        const letter = String.fromCharCode(A + (number - 1) % 26)
+        ret = letter + ret
+        number = (number - 1) / 26 | 0
+    }
+    return ret
 }
 
 function createDocs(titles, valueRanges) {
@@ -66,13 +95,6 @@ function createDocs(titles, valueRanges) {
             .map(([name, total]) => ({name, total: +total}))
         return {series, appearances}
     })
-}
-
-async function getSheetTitles(sheets, spreadsheetId) {
-    const result = await sheets.spreadsheets.get({spreadsheetId})
-    return result.data.sheets
-        .map(sheet => sheet.properties.title)
-        .filter(title => title != 'Total')
 }
 
 async function auth() {
@@ -120,4 +142,6 @@ module.exports = {
     main,
     // for testing
     createDocs,
+    column,
+    fullRange,
 }
