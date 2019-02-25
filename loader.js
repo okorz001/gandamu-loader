@@ -49,13 +49,9 @@ async function main() {
 
 async function getDocs(sheets, spreadsheetId) {
     const allProps = await getSheetProperties(sheets, spreadsheetId)
-    const ranges = allProps.map(props => {
-        const {title, gridProperties: {rowCount, columnCount}} = props
-        return fullRange(title, rowCount, columnCount)
-    })
     const result = await sheets.spreadsheets.values.batchGet({
         spreadsheetId,
-        ranges,
+        ranges: allProps.map(fullRange),
     })
     // TODO: remove titles
     const titles = allProps.map(props => props.title)
@@ -67,8 +63,9 @@ async function getSheetProperties(sheets, spreadsheetId) {
     return result.data.sheets.map(sheet => sheet.properties)
 }
 
-function fullRange(title, rows, columns) {
-    return `'${title}'!A1:${column(columns)}${rows}`
+function fullRange(props) {
+    const {title, gridProperties: {columnCount, rowCount}} = props
+    return `'${title}'!A1:${column(columnCount)}${rowCount}`
 }
 
 const A = 'A'.charCodeAt(0)

@@ -22,11 +22,15 @@ test.each([
     expect(() => loader.column(input)).toThrow()
 })
 
+function createProps(title, rowCount, columnCount) {
+    return {title, gridProperties: {rowCount, columnCount}}
+}
+
 test.each([
-    ['foo', 3, 2, "'foo'!A1:B3"],
-    ['Sheet 1', 100, 27, "'Sheet 1'!A1:AA100"],
-])('fullRange(%j, %j, %j) is %s', (title, rows, columns, expected) => {
-    expect(loader.fullRange(title, rows, columns)).toEqual(expected)
+    [createProps('foo', 3, 2), "'foo'!A1:B3"],
+    [createProps('Sheet 1', 100, 27), "'Sheet 1'!A1:AA100"],
+])('fullRange(%j) is %s', (props, expected) => {
+    expect(loader.fullRange(props)).toEqual(expected)
 })
 
 test('createDocs', () => {
