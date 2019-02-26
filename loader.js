@@ -67,9 +67,31 @@ function createDoc({range, values}) {
     const headers = values[0]
     const appearances = values.slice(1)
         // Skip placeholder rows
-        .filter(value => value[0])
-        .map(([name, total]) => ({name, total: +total}))
+        .filter(values => values[0])
+        .map(values => ({
+            name: values[0],
+            total: values[1] | 0,
+            episodes: episodeSet(headers.slice(2), values.slice(2)),
+        }))
+
+    // TODO: the total cell is redundant
+    appearances.forEach(({name, total, episodes}) => {
+        if (total != Object.keys(episodes).length) {
+            console.log(`(${series},${name}) has inconsistent count`)
+        }
+    })
+
     return {series, appearances}
+}
+
+function episodeSet(keys, values) {
+    const episodes = {}
+    keys.forEach((key, i) => {
+        if (values[i] | 0) {
+            episodes[key] = true
+        }
+    })
+    return episodes
 }
 
 async function auth() {
