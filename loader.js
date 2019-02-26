@@ -53,9 +53,7 @@ async function getDocs(sheets, spreadsheetId) {
         spreadsheetId,
         ranges: allProps.map(props => `'${props.title}'`),
     })
-    // TODO: remove titles
-    const titles = allProps.map(props => props.title)
-    return createDocs(titles, result.data.valueRanges)
+    return result.data.valueRanges.map(createDoc)
 }
 
 async function getSheetProperties(sheets, spreadsheetId) {
@@ -63,14 +61,15 @@ async function getSheetProperties(sheets, spreadsheetId) {
     return result.data.sheets.map(sheet => sheet.properties)
 }
 
-function createDocs(titles, valueRanges) {
-    return valueRanges.map((range, i) => {
-        const series = titles[i]
-        const appearances = range.values
-            .filter(value => value[0])
-            .map(([name, total]) => ({name, total: +total}))
-        return {series, appearances}
-    })
+function createDoc({range, values}) {
+    // Extract sheet title from range
+    const series = range.match(/^'?([^']+)'?!/)[1]
+    const headers = values[0]
+    const appearances = values.slice(1)
+        // Skip placeholder rows
+        .filter(value => value[0])
+        .map(([name, total]) => ({name, total: +total}))
+    return {series, appearances}
 }
 
 async function auth() {
@@ -117,5 +116,5 @@ function getToken(oauth2) {
 module.exports = {
     main,
     // for testing
-    createDocs,
+    createDoc,
 }
