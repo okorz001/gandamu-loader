@@ -51,7 +51,7 @@ async function getDocs(sheets, spreadsheetId) {
     const allProps = await getSheetProperties(sheets, spreadsheetId)
     const result = await sheets.spreadsheets.values.batchGet({
         spreadsheetId,
-        ranges: allProps.map(fullRange),
+        ranges: allProps.map(props => `'${props.title}'`),
     })
     // TODO: remove titles
     const titles = allProps.map(props => props.title)
@@ -61,27 +61,6 @@ async function getDocs(sheets, spreadsheetId) {
 async function getSheetProperties(sheets, spreadsheetId) {
     const result = await sheets.spreadsheets.get({spreadsheetId})
     return result.data.sheets.map(sheet => sheet.properties)
-}
-
-function fullRange(props) {
-    const {title, gridProperties: {columnCount, rowCount}} = props
-    return `'${title}'!A1:${column(columnCount)}${rowCount}`
-}
-
-const A = 'A'.charCodeAt(0)
-
-function column(number) {
-    if (!Number.isInteger(number) || number < 1) {
-        throw new Error(`number is not a positive integer: ${number}`)
-    }
-    let ret = ''
-    while (number > 0) {
-        // number - 1 shifts 1..26 to 0..25
-        const letter = String.fromCharCode(A + (number - 1) % 26)
-        ret = letter + ret
-        number = (number - 1) / 26 | 0
-    }
-    return ret
 }
 
 function createDocs(titles, valueRanges) {
@@ -139,6 +118,4 @@ module.exports = {
     main,
     // for testing
     createDocs,
-    column,
-    fullRange,
 }
