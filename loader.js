@@ -28,8 +28,8 @@ async function main() {
     })
     await mongo.connect()
     try {
-        const db = await mongo.db('gundam')
-        const col = await db.collection('appearances')
+        const db = mongo.db('gundam')
+        const col = db.collection('appearances')
         const ops = docs.map(doc => ({
             replaceOne: {
                 filter: {series: doc.series},
