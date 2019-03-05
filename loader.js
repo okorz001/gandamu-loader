@@ -104,6 +104,8 @@ async function updateMecha({valueRanges}, col) {
     }
     // Remove headers
     const docs = valueRanges[0].values.slice(1)
+        // Skip placeholder rows
+        .filter(values => values[0])
         // One document per row
         .map(values => ({
             name: values[0],
