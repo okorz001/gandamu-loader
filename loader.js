@@ -5,7 +5,11 @@ const {MongoClient} = require('mongodb')
 const {SheetsV4Client} = require('./sheets')
 const util = require('./util')
 
-const SHEET_ID = '1zmRKaSRbooYtKDV5IjD1FJr-LXlOcjZkpjzMnQp4VH0'
+// SpreadSheet IDs
+const SSIDS = {
+    appearances: '1zmRKaSRbooYtKDV5IjD1FJr-LXlOcjZkpjzMnQp4VH0',
+    mecha: '1aj-CNGfNTcCQVs1opkcxWYWrZvvQslkkSWIlgvSP7Ho',
+}
 
 const CREDS_PATH = 'secrets/credentials.json'
 const TOKEN_PATH = 'secrets/token.json'
@@ -25,8 +29,11 @@ async function main() {
 
     try {
         const db = mongo.db('gundam')
-        await updateAppearances(await sheets.getAllValues(SHEET_ID),
+        // These could be done in parallel, but not worth the effort
+        await updateAppearances(await sheets.getAllValues(SSIDS.appearances),
                                 db.collection('appearances'))
+        await updateMecha(await sheets.getAllValues(SSIDS.mecha),
+                          db.collection('mecha'))
     }
     finally {
         mongo.close()
@@ -89,6 +96,21 @@ function episodeSet(keys, values) {
         }
     })
     return episodes
+}
+
+async function updateMecha({valueRanges}, col) {
+    if (valueRanges.length > 1) {
+        console.log('Ignoring extra mecha sheets')
+    }
+    // Remove headers
+    const docs = valueRanges[0].values.slice(1)
+        // One document per row
+        .map(values => ({
+            name: values[0],
+            variant: values[1] || null,
+            image: values[2],
+        }))
+    await replace(col, docs, filterByField('name'))
 }
 
 module.exports = {
