@@ -14,7 +14,6 @@ const DB_CREDS_PATH = 'secrets/db.json'
 async function main() {
     const sheets = new SheetsV4Client()
     await sheets.auth(CREDS_PATH, TOKEN_PATH)
-    const docs = await getDocs(sheets, SHEET_ID)
 
     const data = await util.readFile(DB_CREDS_PATH)
     const {url, user, password} = JSON.parse(data)
@@ -23,32 +22,43 @@ async function main() {
         auth: {user, password},
     })
     await mongo.connect()
+
     try {
         const db = mongo.db('gundam')
-        const col = db.collection('appearances')
-        const ops = docs.map(doc => ({
-            replaceOne: {
-                filter: {series: doc.series},
-                replacement: doc,
-                upsert: true,
-            },
-        }))
-        const result = await col.bulkWrite(ops)
-        console.log(`Upserted ${result.upsertedCount}`)
-        console.log(`Matched ${result.matchedCount}`)
-        console.log(`Modified ${result.modifiedCount}`)
+        await updateAppearances(await sheets.getAllValues(SHEET_ID),
+                                db.collection('appearances'))
     }
     finally {
         mongo.close()
     }
 }
 
-async function getDocs(sheets, spreadsheetId) {
-    const allValues = await sheets.getAllValues(spreadsheetId)
-    return allValues.valueRanges.map(createDoc)
+async function replace(col, docs, filter) {
+    const ops = docs.map(doc => ({
+        replaceOne: {
+            filter: filter(doc),
+            replacement: doc,
+            upsert: true,
+        },
+    }))
+    const result = await col.bulkWrite(ops)
+    console.log(`Collection ${col.collectionName}:`,
+                `${result.upsertedCount} inserted,`,
+                `${result.matchedCount} matched,`,
+                `${result.modifiedCount} updated`)
 }
 
-function createDoc({range, values}) {
+function filterByField(field) {
+    return doc => ({[field]: doc[field]})
+}
+
+async function updateAppearances({valueRanges}, col) {
+    // One document per sheet
+    const docs = valueRanges.map(parseAppearances)
+    await replace(col, docs, filterByField('series'))
+}
+
+function parseAppearances({range, values}) {
     // Extract sheet title from range
     const series = range.match(/^'?([^']+)'?!/)[1]
     const headers = values[0]
@@ -84,5 +94,5 @@ function episodeSet(keys, values) {
 module.exports = {
     main,
     // for testing
-    createDoc,
+    parseAppearances,
 }

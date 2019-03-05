@@ -1,6 +1,6 @@
 const loader = require('../loader')
 
-test('createDoc series', () => {
+test('parseAppearances series', () => {
     const valueRange = {
         range: 'foo!A1:B2',
         values: [
@@ -12,10 +12,10 @@ test('createDoc series', () => {
     const expected = {
         series: 'foo',
     }
-    expect(loader.createDoc(valueRange)).toMatchObject(expected)
+    expect(loader.parseAppearances(valueRange)).toMatchObject(expected)
 })
 
-test('createDoc series from quoted title', () => {
+test('parseAppearances series from quoted title', () => {
     const valueRange = {
         range: "'Sheet 1'!A1:B2",
         values: [
@@ -27,10 +27,10 @@ test('createDoc series from quoted title', () => {
     const expected = {
         series: 'Sheet 1',
     }
-    expect(loader.createDoc(valueRange)).toMatchObject(expected)
+    expect(loader.parseAppearances(valueRange)).toMatchObject(expected)
 })
 
-test('createDoc name, total', () => {
+test('parseAppearances name, total', () => {
     const valueRange = {
         range: 'unused!A1:B2',
         values: [
@@ -45,10 +45,10 @@ test('createDoc name, total', () => {
             {name: 'd', total: 4},
         ],
     }
-    expect(loader.createDoc(valueRange)).toMatchObject(expected)
+    expect(loader.parseAppearances(valueRange)).toMatchObject(expected)
 })
 
-test('createDoc episodes', () => {
+test('parseAppearances episodes', () => {
     const valueRange = {
         range: 'unused!A1:B2',
         values: [
@@ -65,10 +65,10 @@ test('createDoc episodes', () => {
             {episodes: {bar: true}},
         ],
     }
-    expect(loader.createDoc(valueRange)).toMatchObject(expected)
+    expect(loader.parseAppearances(valueRange)).toMatchObject(expected)
 })
 
-test('createDoc episodes with ?', () => {
+test('parseAppearances episodes with ?', () => {
     const valueRange = {
         range: 'unused!A1:B2',
         values: [
@@ -83,5 +83,5 @@ test('createDoc episodes with ?', () => {
             {episodes: {}},
         ],
     }
-    expect(loader.createDoc(valueRange)).toMatchObject(expected)
+    expect(loader.parseAppearances(valueRange)).toMatchObject(expected)
 })
