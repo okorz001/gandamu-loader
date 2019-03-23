@@ -116,6 +116,7 @@ async function updateMecha({valueRanges}, col) {
         .map(values => ({
             name: values[0],
             variant: values[1] || null,
+            hasImage: !!values[2] && !!values[3] && !!values[4] && !!values[5] && !!values[6],
         }))
     await replace(col, docs, filterByField('name'))
 }
