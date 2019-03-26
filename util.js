@@ -1,9 +1,11 @@
 'use strict'
 
+const async = require('async')
 const fs = require('fs')
 const readline = require('readline')
 const {promisify} = require('util')
 
+const pmap = promisify(async.mapLimit)
 const readFile = promisify(fs.readFile)
 const writeFile = promisify(fs.writeFile)
 
@@ -22,6 +24,7 @@ function readLine(prompt) {
 }
 
 module.exports = {
+    pmap,
     readFile,
     writeFile,
     readLine,

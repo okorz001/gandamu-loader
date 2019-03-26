@@ -132,21 +132,18 @@ async function updateImages({valueRanges}, col) {
         // Skip rows without image and crop info
         .filter(values => values[2] && values[3] && values[4] && values[5] && values[6])
     // One document per row
-    // TODO: parallelize this, with a limit
-    const docs = []
-    for (const values of rows) {
-        const source = {
-            left: values[3] | 0,
-            top: values[4] | 0,
-            width: values[5] | 0,
-            height: values[6] | 0,
-        }
-        docs.push({
-            name: values[0],
-            image: await createImage(values[2], source),
-        })
-    }
+    const docs = await util.pmap(rows, 8, createImageDoc)
     await replace(col, docs, filterByField('name'))
+}
+
+async function createImageDoc(values) {
+    const image = await createImage(values[2], {
+        left: values[3] | 0,
+        top: values[4] | 0,
+        width: values[5] | 0,
+        height: values[6] | 0,
+    })
+    return {name: values[0], image}
 }
 
 async function createImage(url, source) {
