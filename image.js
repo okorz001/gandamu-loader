@@ -6,7 +6,7 @@ const WHITE = {r: 255, g: 255, b: 255}
 
 async function cropAndResize(buffer, source, target) {
     const image = sharp(buffer)
-    const meta = await image.metadata
+    const meta = await image.metadata()
 
     // compute scale factor for resizing
     const scale = {
