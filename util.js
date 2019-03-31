@@ -5,7 +5,7 @@ const fs = require('fs')
 const readline = require('readline')
 const {promisify} = require('util')
 
-const pmap = promisify(async.mapLimit)
+const mapLimit = promisify(async.mapLimit)
 const readFile = promisify(fs.readFile)
 const writeFile = promisify(fs.writeFile)
 
@@ -23,9 +23,13 @@ function readLine(prompt) {
     })
 }
 
+function pmap(coll, limit, func) {
+    return mapLimit(coll, limit, async.asyncify(func))
+}
+
 module.exports = {
-    pmap,
     readFile,
     writeFile,
     readLine,
+    pmap,
 }
