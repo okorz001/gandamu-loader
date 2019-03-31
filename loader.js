@@ -8,6 +8,8 @@ const {SheetsV4Client} = require('./sheets')
 const util = require('./util')
 
 const IMAGE_SIZE = {width: 40, height: 40}
+const IMAGE_PARALLEL_DOWNLOADS = 8
+const IMAGE_DOWNLOAD_DELAY_MS = 250
 
 // SpreadSheet IDs
 const SSIDS = {
@@ -132,7 +134,7 @@ async function updateImages({valueRanges}, col) {
         // Skip rows without image and crop info
         .filter(values => values[2] && values[3] && values[4] && values[5] && values[6])
     // One document per row
-    const docs = await util.pmap(rows, 8, createImageDoc)
+    const docs = await util.pmap(rows, IMAGE_PARALLEL_DOWNLOADS, createImageDoc)
     await replace(col, docs, filterByField('name'))
 }
 
@@ -147,6 +149,8 @@ async function createImageDoc(values) {
 }
 
 async function createImage(url, source) {
+    // Waiting a bit between downloads prevents ETIMEDOUT (???)
+    await util.wait(IMAGE_DOWNLOAD_DELAY_MS)
     const res = await fetch(url)
     return image.cropAndResize(await res.buffer(), source, IMAGE_SIZE)
 }

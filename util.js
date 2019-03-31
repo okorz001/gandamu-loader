@@ -27,9 +27,14 @@ function pmap(coll, limit, func) {
     return mapLimit(coll, limit, async.asyncify(func))
 }
 
+function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 module.exports = {
     readFile,
     writeFile,
     readLine,
     pmap,
+    wait,
 }
