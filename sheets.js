@@ -79,7 +79,8 @@ async function getToken(oauth2) {
     const url = oauth2.generateAuthUrl({access_type: 'offline', scope: SCOPES})
     console.log(`Grant access by visiting this URL in a browser: ${url}`)
     const code = await util.readLine('Enter the code: ')
-    return oauth2.getToken(code)
+    const result = await oauth2.getToken(code)
+    return result.tokens
 }
 
 module.exports = {
